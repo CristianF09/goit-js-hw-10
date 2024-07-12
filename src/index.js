@@ -1,84 +1,79 @@
-import { fetchBreeds, fetchCatByBreed } from './cat-api';
+import { fetchBreeds, fetchCatByBreed } from './cat-api.js';
+import SlimSelect from 'slim-select';
+import Notiflix from 'notiflix';
 
-const breedSelect = document.querySelector('.breed-select');
+// Initialize SlimSelect
+new SlimSelect({
+  select: '#breed-select',
+});
+
+// Select elements
+const breedSelect = document.getElementById('breed-select');
 const loader = document.querySelector('.loader');
-const error = document.querySelector('.error');
 const catInfo = document.querySelector('.cat-info');
+const catImage = document.querySelector('.cat-image');
+const breedName = document.querySelector('.breed-name');
+const description = document.querySelector('.description');
+const temperament = document.querySelector('.temperament');
 
 /**
- * Populates the dropdown with cat breeds.
- * @param {Array} breeds - The array of cat breeds.
+ * Show loader
  */
-const populateBreeds = (breeds) => {
-  breeds.forEach((breed) => {
-    const option = document.createElement('option');
-    option.value = breed.id;
-    option.textContent = breed.name;
-    breedSelect.appendChild(option);
-  });
+const showLoader = () => {
+  loader.classList.remove('hidden');
 };
 
 /**
- * Displays the information about the selected cat breed.
- * @param {Array} data - The array of cat images and breed info.
+ * Hide loader
  */
-const displayBreedInfo = (data) => {
-  const breed = data[0].breeds[0];
-  const breedInfoHTML = `
-    <h2>${breed.name}</h2>
-    <p>${breed.description}</p>
-    <p><strong>Temperament:</strong> ${breed.temperament}</p>
-    <div class="cat-images">
-      ${data.map((image) => `<img src="${image.url}" alt="${breed.name}">`).join('')}
-    </div>
-  `;
-  catInfo.innerHTML = breedInfoHTML;
-  catInfo.classList.remove('hidden');
+const hideLoader = () => {
+  loader.classList.add('hidden');
 };
 
 /**
- * Fetches and displays the information about the selected breed.
- * @param {string} breedId - The ID of the selected breed.
+ * Load breeds and populate the select element
  */
-const fetchBreedInfo = async (breedId) => {
+const loadBreeds = async () => {
   try {
-    loader.classList.remove('hidden');
-    catInfo.classList.add('hidden');
-    error.classList.add('hidden');
-
-    const data = await fetchCatByBreed(breedId);
-    displayBreedInfo(data);
-  } catch (err) {
-    error.classList.remove('hidden');
-  } finally {
-    loader.classList.add('hidden');
-  }
-};
-
-/**
- * Initializes the application.
- */
-const init = async () => {
-  try {
-    loader.classList.remove('hidden');
-    breedSelect.classList.add('hidden');
-    error.classList.add('hidden');
-
+    showLoader();
     const breeds = await fetchBreeds();
-    populateBreeds(breeds);
-    breedSelect.classList.remove('hidden');
-  } catch (err) {
-    error.classList.remove('hidden');
-  } finally {
-    loader.classList.add('hidden');
+    breedSelect.innerHTML = breeds.map(breed => `<option value="${breed.id}">${breed.name}</option>`).join('');
+    hideLoader();
+  } catch (error) {
+    hideLoader();
+    Notiflix.Notify.failure('Failed to load breeds');
   }
 };
 
+/**
+ * Load cat by breed and display info
+ * @param {string} breedId - The ID of the breed
+ */
+const loadCatByBreed = async (breedId) => {
+  try {
+    showLoader();
+    catInfo.classList.add('hidden');
+    const cats = await fetchCatByBreed(breedId);
+    const cat = cats[0];
+    catImage.src = cat.url;
+    breedName.textContent = cat.breeds[0].name;
+    description.textContent = cat.breeds[0].description;
+    temperament.textContent = cat.breeds[0].temperament;
+    catInfo.classList.remove('hidden');
+    hideLoader();
+  } catch (error) {
+    hideLoader();
+    Notiflix.Notify.failure('Failed to load cat information');
+  }
+};
+
+// Event listener for breed select change
 breedSelect.addEventListener('change', (event) => {
   const breedId = event.target.value;
   if (breedId) {
-    fetchBreedInfo(breedId);
+    loadCatByBreed(breedId);
   }
 });
 
-init();
+// Load breeds on page load
+loadBreeds();
