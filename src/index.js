@@ -31,17 +31,27 @@ const hideLoader = () => {
 };
 
 /**
+ * Show error message
+ * @param {string} message - The error message to display
+ */
+const showError = (message) => {
+  Notiflix.Notify.failure(message);
+};
+
+/**
  * Load breeds and populate the select element
  */
 const loadBreeds = async () => {
   try {
     showLoader();
+    breedSelect.classList.add('hidden');
     const breeds = await fetchBreeds();
     breedSelect.innerHTML = breeds.map(breed => `<option value="${breed.id}">${breed.name}</option>`).join('');
+    breedSelect.classList.remove('hidden');
     hideLoader();
   } catch (error) {
     hideLoader();
-    Notiflix.Notify.failure('Failed to load breeds');
+    showError('Failed to load breeds');
   }
 };
 
@@ -53,6 +63,7 @@ const loadCatByBreed = async (breedId) => {
   try {
     showLoader();
     catInfo.classList.add('hidden');
+    catImage.src = 'loading-image.gif'; // Optional: set a loading image
     const cats = await fetchCatByBreed(breedId);
     const cat = cats[0];
     catImage.src = cat.url;
@@ -63,7 +74,7 @@ const loadCatByBreed = async (breedId) => {
     hideLoader();
   } catch (error) {
     hideLoader();
-    Notiflix.Notify.failure('Failed to load cat information');
+    showError('Failed to load cat information');
   }
 };
 

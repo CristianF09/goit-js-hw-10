@@ -18,6 +18,7 @@
     "url": "https://github.com/goitacademy/goit-js-hw-10/issues"
   },
   "dependencies": {
+    "@swc/helpers": "^0.5.12",
     "@thatapicompany/thecatapi": "^1.0.2",
     "axios": "^1.7.2",
     "modern-normalize": "^1.1.0",
